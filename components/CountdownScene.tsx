@@ -8,8 +8,14 @@ import {
   AdaptiveEvents,
   PerformanceMonitor,
 } from "@react-three/drei";
-import type { BufferGeometry, ShaderMaterial } from "three";
-import { AdditiveBlending, BufferAttribute, Plane, Vector2, Vector3 } from "three";
+import type { BufferGeometry, Points as ThreePoints, ShaderMaterial } from "three";
+import {
+  AdditiveBlending,
+  BufferAttribute,
+  Plane,
+  Vector2,
+  Vector3,
+} from "three";
 
 type QualityTier = "low" | "medium" | "high";
 
@@ -129,63 +135,67 @@ function useCountdown(target: Date) {
   };
 }
 
-function getSettings(quality: QualityTier): CountdownSettings {
+function scaleWithViewport(value: number, viewportScale: number, influence: number) {
+  return value * (1 + (viewportScale - 1) * influence);
+}
+
+function getSettings(quality: QualityTier, viewportScale = 1): CountdownSettings {
   if (quality === "high") {
     return {
-      resolution: 80,
-      particlesPerGlyph: 224,
-      glyphWidth: 0.52,
-      glyphHeight: 0.92,
-      glyphWidthScale: 1.38,
-      digitStep: 0.58,
-      groupSpacingX: 1.86,
-      groupSpacingY: 1.08,
-      separatorGapX: 0.82,
-      separatorGapY: 0.78,
-      separatorWidth: 0.2,
-      separatorHeight: 0.58,
-      pointSizeMin: 0.03,
-      pointSizeMax: 0.064,
-      pointSizeScale: 4.25,
+      resolution: Math.round(scaleWithViewport(80, viewportScale, 0.35)),
+      particlesPerGlyph: Math.round(scaleWithViewport(224, viewportScale, 0.08)),
+      glyphWidth: scaleWithViewport(0.52, viewportScale, 0.1),
+      glyphHeight: scaleWithViewport(0.92, viewportScale, 0.08),
+      glyphWidthScale: scaleWithViewport(1.38, viewportScale, 0.16),
+      digitStep: scaleWithViewport(0.58, viewportScale, 0.9),
+      groupSpacingX: scaleWithViewport(1.86, viewportScale, 0.92),
+      groupSpacingY: scaleWithViewport(1.08, viewportScale, 0.18),
+      separatorGapX: scaleWithViewport(0.82, viewportScale, 0.92),
+      separatorGapY: scaleWithViewport(0.78, viewportScale, 0.18),
+      separatorWidth: scaleWithViewport(0.2, viewportScale, 0.08),
+      separatorHeight: scaleWithViewport(0.58, viewportScale, 0.08),
+      pointSizeMin: scaleWithViewport(0.03, viewportScale, 0.08),
+      pointSizeMax: scaleWithViewport(0.064, viewportScale, 0.08),
+      pointSizeScale: scaleWithViewport(4.25, viewportScale, 0.16),
     };
   }
 
   if (quality === "low") {
     return {
-      resolution: 44,
-      particlesPerGlyph: 128,
-      glyphWidth: 0.48,
-      glyphHeight: 0.88,
-      glyphWidthScale: 1.32,
-      digitStep: 0.54,
-      groupSpacingX: 1.74,
-      groupSpacingY: 1.0,
-      separatorGapX: 0.78,
-      separatorGapY: 0.72,
-      separatorWidth: 0.18,
-      separatorHeight: 0.5,
-      pointSizeMin: 0.028,
-      pointSizeMax: 0.058,
-      pointSizeScale: 3.7,
+      resolution: Math.round(scaleWithViewport(44, viewportScale, 0.3)),
+      particlesPerGlyph: Math.round(scaleWithViewport(128, viewportScale, 0.06)),
+      glyphWidth: scaleWithViewport(0.48, viewportScale, 0.09),
+      glyphHeight: scaleWithViewport(0.88, viewportScale, 0.07),
+      glyphWidthScale: scaleWithViewport(1.32, viewportScale, 0.14),
+      digitStep: scaleWithViewport(0.54, viewportScale, 0.82),
+      groupSpacingX: scaleWithViewport(1.74, viewportScale, 0.88),
+      groupSpacingY: scaleWithViewport(1.0, viewportScale, 0.16),
+      separatorGapX: scaleWithViewport(0.78, viewportScale, 0.88),
+      separatorGapY: scaleWithViewport(0.72, viewportScale, 0.16),
+      separatorWidth: scaleWithViewport(0.18, viewportScale, 0.06),
+      separatorHeight: scaleWithViewport(0.5, viewportScale, 0.06),
+      pointSizeMin: scaleWithViewport(0.028, viewportScale, 0.06),
+      pointSizeMax: scaleWithViewport(0.058, viewportScale, 0.06),
+      pointSizeScale: scaleWithViewport(3.7, viewportScale, 0.14),
     };
   }
 
   return {
-    resolution: 64,
-    particlesPerGlyph: 176,
-    glyphWidth: 0.5,
-    glyphHeight: 0.9,
-    glyphWidthScale: 1.34,
-    digitStep: 0.56,
-    groupSpacingX: 1.82,
-    groupSpacingY: 1.04,
-    separatorGapX: 0.8,
-    separatorGapY: 0.74,
-    separatorWidth: 0.19,
-    separatorHeight: 0.55,
-    pointSizeMin: 0.03,
-    pointSizeMax: 0.062,
-    pointSizeScale: 4.0,
+    resolution: Math.round(scaleWithViewport(64, viewportScale, 0.32)),
+    particlesPerGlyph: Math.round(scaleWithViewport(176, viewportScale, 0.07)),
+    glyphWidth: scaleWithViewport(0.5, viewportScale, 0.09),
+    glyphHeight: scaleWithViewport(0.9, viewportScale, 0.07),
+    glyphWidthScale: scaleWithViewport(1.34, viewportScale, 0.14),
+    digitStep: scaleWithViewport(0.56, viewportScale, 0.84),
+    groupSpacingX: scaleWithViewport(1.82, viewportScale, 0.9),
+    groupSpacingY: scaleWithViewport(1.04, viewportScale, 0.16),
+    separatorGapX: scaleWithViewport(0.8, viewportScale, 0.9),
+    separatorGapY: scaleWithViewport(0.74, viewportScale, 0.16),
+    separatorWidth: scaleWithViewport(0.19, viewportScale, 0.06),
+    separatorHeight: scaleWithViewport(0.55, viewportScale, 0.06),
+    pointSizeMin: scaleWithViewport(0.03, viewportScale, 0.06),
+    pointSizeMax: scaleWithViewport(0.062, viewportScale, 0.06),
+    pointSizeScale: scaleWithViewport(4.0, viewportScale, 0.14),
   };
 }
 
@@ -223,6 +233,7 @@ function sampleGlyphPositions(char: string, resolution: number, sampleCount: num
   }
 
   ctx.clearRect(0, 0, resolution, resolution);
+  ctx.imageSmoothingEnabled = false;
   ctx.fillStyle = "#000";
   ctx.fillRect(0, 0, resolution, resolution);
   ctx.fillStyle = "#fff";
@@ -242,8 +253,9 @@ function sampleGlyphPositions(char: string, resolution: number, sampleCount: num
   for (let y = 0; y < resolution; y += 1) {
     for (let x = 0; x < resolution; x += 1) {
       const index = (y * resolution + x) * 4;
+      const alpha = data[index + 3];
       const brightness = data[index] + data[index + 1] + data[index + 2];
-      if (brightness > 500) {
+      if (alpha > 200 && brightness > 620) {
         rawPoints.push([(x / resolution) * 2 - 1, -((y / resolution) * 2 - 1)]);
       }
     }
@@ -278,6 +290,21 @@ function buildGlyphCache(settings: CountdownSettings) {
   }
 
   return cache;
+}
+
+function useViewportWidth() {
+  const [width, setWidth] = useState(() =>
+    typeof window === "undefined" ? 1024 : window.innerWidth
+  );
+
+  useEffect(() => {
+    const update = () => setWidth(window.innerWidth);
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  return width;
 }
 
 function useLayoutMode() {
@@ -315,7 +342,7 @@ function computeLayout(countdown: CountdownValue, settings: CountdownSettings, i
     countdown.seconds,
   ].map((value) => value.slice(-2).padStart(2, "0"));
   const digitSpacing = settings.digitStep * settings.glyphWidthScale;
-  const stackOffsetY = isStacked ? -1.4 : -0.78;
+  const stackOffsetY = isStacked ? -1.18 : -0.62;
 
   const groupOrigins = isStacked
     ? [1.5, 0.5, -0.5, -1.5].map((y) => ({ x: 0, y: y * settings.groupSpacingY + stackOffsetY }))
@@ -356,6 +383,73 @@ function computeLayout(countdown: CountdownValue, settings: CountdownSettings, i
   });
 
   return items;
+}
+
+function Starfield({
+  quality,
+  reducedMotion,
+}: {
+  quality: QualityTier;
+  reducedMotion: boolean;
+}) {
+  const pointsRef = useRef<ThreePoints>(null!);
+  const count = quality === "high" ? 180 : quality === "medium" ? 132 : 88;
+
+  const positions = useMemo(() => {
+    const arr = new Float32Array(count * 3);
+
+    for (let index = 0; index < count; index += 1) {
+      const seed = index * 97.31;
+      arr[index * 3] = (hash01(seed + 1.1) - 0.5) * 18;
+      arr[index * 3 + 1] = (hash01(seed + 2.2) - 0.5) * 10.5;
+      arr[index * 3 + 2] = -3.5 - hash01(seed + 3.3) * 4.5;
+    }
+
+    return arr;
+  }, [count]);
+
+  useEffect(() => {
+    if (pointsRef.current) {
+      pointsRef.current.geometry.setAttribute("position", new BufferAttribute(positions, 3));
+    }
+  }, [positions]);
+
+  useFrame((state, delta) => {
+    if (pointsRef.current) {
+      pointsRef.current.rotation.y += delta * (reducedMotion ? 0.003 : 0.008);
+      pointsRef.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.04) * 0.01;
+    }
+  });
+
+  return (
+    <points ref={pointsRef} renderOrder={0}>
+      <bufferGeometry />
+      <pointsMaterial
+        color="#7fdfff"
+        size={0.012}
+        sizeAttenuation
+        transparent
+        opacity={0.26}
+        depthWrite={false}
+      />
+    </points>
+  );
+}
+
+function getPresentationScale(viewportWidth: number) {
+  if (viewportWidth >= 1440) {
+    return 1.12;
+  }
+
+  if (viewportWidth >= 1024) {
+    return 1.08;
+  }
+
+  if (viewportWidth < 640) {
+    return 0.98;
+  }
+
+  return 1;
 }
 
 function createSystem(
@@ -443,7 +537,15 @@ function CountdownParticles({
   const pointsGeometryRef = useRef<BufferGeometry>(null!);
   const materialRef = useRef<ShaderMaterial>(null!);
   const pointerPlane = useMemo(() => new Plane(new Vector3(0, 0, 1), 0), []);
-  const settings = useMemo(() => getSettings(quality), [quality]);
+  const viewportWidth = useViewportWidth();
+  const presentationScale = useMemo(
+    () => getPresentationScale(viewportWidth),
+    [viewportWidth]
+  );
+  const settings = useMemo(
+    () => getSettings(quality, presentationScale),
+    [quality, presentationScale]
+  );
   const glyphCache = useMemo(() => buildGlyphCache(settings), [settings]);
   const countdown = useCountdown(EVENT_START);
   const isStacked = useLayoutMode();
@@ -551,6 +653,7 @@ function CountdownParticles({
 
   return (
     <group>
+      <Starfield quality={quality} reducedMotion={reducedMotion} />
       <points>
         <bufferGeometry ref={pointsGeometryRef} />
         <shaderMaterial
