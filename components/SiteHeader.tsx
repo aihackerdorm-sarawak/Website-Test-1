@@ -20,7 +20,7 @@ export function SiteHeader({ onNavigate }: SiteHeaderProps) {
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
         <button
           type="button"
-          onClick={() => onNavigate("hero")}
+          onClick={() => onNavigate("countdown")}
           className="flex items-center gap-3 text-left"
         >
           <span className="flex h-10 w-10 items-center justify-center rounded-2xl border border-cyan-400/25 bg-cyan-400/10 text-cyan-200">

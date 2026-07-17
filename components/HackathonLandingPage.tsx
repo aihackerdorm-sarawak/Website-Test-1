@@ -2,6 +2,7 @@
 
 import { useCallback } from "react";
 import { useReducedMotion } from "framer-motion";
+import { CountdownHero } from "./CountdownHero";
 import { ContentSections } from "./ContentSections";
 import { Hero } from "./Hero";
 import { PartnerForm } from "./PartnerForm";
@@ -37,6 +38,7 @@ export function HackathonLandingPage() {
 
       <div className="relative z-10">
         <SiteHeader onNavigate={navigate} />
+        <CountdownHero />
         <Hero
           onPrimaryAction={() => navigate("partner-form")}
           onSecondaryAction={() => navigate("partner")}

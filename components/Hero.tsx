@@ -24,23 +24,25 @@ type DeviceProfile = {
   quality: QualityTier;
 };
 
+function getDeviceQuality(): QualityTier {
+  if (typeof window === "undefined") {
+    return "medium";
+  }
+
+  const coarse = window.matchMedia("(pointer: coarse)").matches;
+  const cores = navigator.hardwareConcurrency ?? 4;
+  const saveData =
+    typeof navigator !== "undefined" &&
+    "connection" in navigator &&
+    Boolean((navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData);
+  const lowEnd = saveData || cores <= 4 || (coarse && cores <= 6);
+  const medium = cores <= 8 || coarse;
+
+  return lowEnd ? "low" : medium ? "medium" : "high";
+}
+
 function useDeviceProfile() {
-  const [profile, setProfile] = useState<DeviceProfile>({ quality: "medium" });
-
-  useEffect(() => {
-    const coarse = window.matchMedia("(pointer: coarse)").matches;
-    const cores = navigator.hardwareConcurrency ?? 4;
-    const saveData =
-      typeof navigator !== "undefined" &&
-      "connection" in navigator &&
-      Boolean((navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData);
-    const lowEnd = saveData || cores <= 4 || (coarse && cores <= 6);
-    const medium = cores <= 8 || coarse;
-
-    setProfile({
-      quality: lowEnd ? "low" : medium ? "medium" : "high",
-    });
-  }, []);
+  const [profile] = useState<DeviceProfile>(() => ({ quality: getDeviceQuality() }));
 
   return profile;
 }
@@ -101,14 +103,13 @@ export function Hero({ onPrimaryAction, onSecondaryAction }: HeroProps) {
   const reducedMotion = useReducedMotion() ?? false;
   const { ref, isInView } = useInView<HTMLDivElement>();
   const { quality } = useDeviceProfile();
-  const [typedStatus, setTypedStatus] = useState(
+  const [typedStatus, setTypedStatus] = useState(() =>
     reducedMotion ? "// INITIALIZING NETWORK BRIDGE" : ""
   );
   const statusText = useMemo(() => "// INITIALIZING NETWORK BRIDGE", []);
 
   useEffect(() => {
     if (reducedMotion) {
-      setTypedStatus(statusText);
       return;
     }
 
@@ -179,7 +180,7 @@ export function Hero({ onPrimaryAction, onSecondaryAction }: HeroProps) {
         <div className="pointer-events-none grid items-center gap-10 pb-8 pt-10 lg:grid-cols-[0.95fr_1.05fr] lg:pb-12 lg:pt-0">
           <div className="pointer-events-none space-y-8">
             <div className="pointer-events-auto inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-2 font-mono text-[11px] uppercase tracking-[0.32em] text-cyan-200 backdrop-blur-md">
-              // Connecting campuses, companies, and communities
+              Connecting campuses, companies, and communities
             </div>
 
             <div className="max-w-3xl space-y-5">

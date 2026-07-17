@@ -227,10 +227,6 @@ export function HeroScene({ active, reducedMotion, quality }: HeroSceneProps) {
   const [liveQuality, setLiveQuality] = useState<QualityTier>(quality);
   const dprCap = liveQuality === "high" ? 1.5 : liveQuality === "medium" ? 1.25 : 1;
 
-  useEffect(() => {
-    setLiveQuality(quality);
-  }, [quality]);
-
   const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
     const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
