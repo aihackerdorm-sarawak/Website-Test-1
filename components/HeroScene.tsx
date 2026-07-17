@@ -231,7 +231,7 @@ export function HeroScene({ active, reducedMotion, quality }: HeroSceneProps) {
     setLiveQuality(quality);
   }, [quality]);
 
-  const handlePointerMove = (event: ReactPointerEvent<HTMLCanvasElement>) => {
+  const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
     const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
     const y = -(((event.clientY - rect.top) / rect.height) * 2 - 1);
