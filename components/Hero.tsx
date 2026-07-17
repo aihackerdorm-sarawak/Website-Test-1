@@ -147,7 +147,7 @@ export function Hero({ onPrimaryAction, onSecondaryAction }: HeroProps) {
       <div className="pointer-events-none absolute inset-0 z-[1] bg-[radial-gradient(circle_at_top,rgba(0,240,255,0.14),transparent_30%),radial-gradient(circle_at_50%_75%,rgba(0,85,255,0.14),transparent_24%),linear-gradient(to_bottom,rgba(3,3,5,0.08),rgba(3,3,5,0.76))]" />
       <div className="pointer-events-none absolute inset-0 z-[1] bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:68px_68px] opacity-50 [mask-image:radial-gradient(circle_at_center,black,transparent_82%)]" />
 
-      <div className="relative z-10 mx-auto flex min-h-[100svh] w-full max-w-7xl flex-col justify-between px-4 py-4 sm:px-6 lg:px-8">
+      <div className="pointer-events-none relative z-10 mx-auto flex min-h-[100svh] w-full max-w-7xl flex-col justify-between px-4 py-4 sm:px-6 lg:px-8">
         <div className="pointer-events-none flex items-start justify-between gap-4">
           <motion.div
             initial={reducedMotion ? false : { opacity: 0, y: -10 }}
@@ -176,7 +176,7 @@ export function Hero({ onPrimaryAction, onSecondaryAction }: HeroProps) {
           </motion.div>
         </div>
 
-        <div className="grid items-center gap-10 pb-8 pt-10 lg:grid-cols-[0.95fr_1.05fr] lg:pb-12 lg:pt-0">
+        <div className="pointer-events-none grid items-center gap-10 pb-8 pt-10 lg:grid-cols-[0.95fr_1.05fr] lg:pb-12 lg:pt-0">
           <div className="pointer-events-none space-y-8">
             <div className="pointer-events-auto inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-2 font-mono text-[11px] uppercase tracking-[0.32em] text-cyan-200 backdrop-blur-md">
               // Connecting campuses, companies, and communities

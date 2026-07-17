@@ -96,18 +96,18 @@ function Constellation({
 
   useFrame((state, delta) => {
     const pointer = pointerTarget.current;
-    const damp = reducedMotion ? 0.04 : 0.08;
+    const damp = reducedMotion ? 0.04 : 0.18; // how fast it catchees up the frame.
     const cameraZ = quality === "low" ? 7.6 : 7.0;
 
-    state.camera.position.x += (pointer.x * 0.55 - state.camera.position.x) * damp;
-    state.camera.position.y += ((0.3 + pointer.y * 0.28) - state.camera.position.y) * damp;
+    state.camera.position.x += (pointer.x * 6 - state.camera.position.x) * damp;
+    state.camera.position.y += ((0.3 + pointer.y * 5) - state.camera.position.y) * damp;
     state.camera.position.z += (cameraZ - state.camera.position.z) * 0.03;
     state.camera.lookAt(0, 0, 0);
 
     if (groupRef.current) {
       groupRef.current.rotation.y += delta * (reducedMotion ? 0.02 : 0.07);
       groupRef.current.rotation.x =
-        Math.sin(state.clock.elapsedTime * 0.12) * 0.09 + pointer.y * 0.05;
+        Math.sin(state.clock.elapsedTime * 0.12) * 0.09 + pointer.y * 0.14;
     }
 
     if (coreRef.current) {
