@@ -8,6 +8,7 @@ import {
   AdaptiveEvents,
   PerformanceMonitor,
 } from "@react-three/drei";
+import { Bloom, EffectComposer } from "@react-three/postprocessing";
 import type { BufferGeometry, Points as ThreePoints, ShaderMaterial } from "three";
 import {
   AdditiveBlending,
@@ -23,6 +24,7 @@ type CountdownSceneProps = {
   active: boolean;
   reducedMotion: boolean;
   quality: QualityTier;
+  headerHeightPx: number;
 };
 
 type CountdownValue = {
@@ -152,11 +154,11 @@ function getSettings(quality: QualityTier, viewportScale = 1): CountdownSettings
       groupSpacingY: scaleWithViewport(1.08, viewportScale, 0.18),
       separatorGapX: scaleWithViewport(0.82, viewportScale, 0.92),
       separatorGapY: scaleWithViewport(0.78, viewportScale, 0.18),
-      separatorWidth: scaleWithViewport(0.2, viewportScale, 0.08),
-      separatorHeight: scaleWithViewport(0.58, viewportScale, 0.08),
-      pointSizeMin: scaleWithViewport(0.03, viewportScale, 0.08),
-      pointSizeMax: scaleWithViewport(0.064, viewportScale, 0.08),
-      pointSizeScale: scaleWithViewport(4.25, viewportScale, 0.16),
+      separatorWidth: scaleWithViewport(0.16, viewportScale, 0.08),
+      separatorHeight: scaleWithViewport(0.48, viewportScale, 0.08),
+      pointSizeMin: scaleWithViewport(0.048, viewportScale, 0.1),
+      pointSizeMax: scaleWithViewport(0.092, viewportScale, 0.1),
+      pointSizeScale: scaleWithViewport(4.35, viewportScale, 0.18),
     };
   }
 
@@ -172,11 +174,11 @@ function getSettings(quality: QualityTier, viewportScale = 1): CountdownSettings
       groupSpacingY: scaleWithViewport(1.0, viewportScale, 0.16),
       separatorGapX: scaleWithViewport(0.78, viewportScale, 0.88),
       separatorGapY: scaleWithViewport(0.72, viewportScale, 0.16),
-      separatorWidth: scaleWithViewport(0.18, viewportScale, 0.06),
-      separatorHeight: scaleWithViewport(0.5, viewportScale, 0.06),
-      pointSizeMin: scaleWithViewport(0.028, viewportScale, 0.06),
-      pointSizeMax: scaleWithViewport(0.058, viewportScale, 0.06),
-      pointSizeScale: scaleWithViewport(3.7, viewportScale, 0.14),
+      separatorWidth: scaleWithViewport(0.14, viewportScale, 0.06),
+      separatorHeight: scaleWithViewport(0.42, viewportScale, 0.06),
+      pointSizeMin: scaleWithViewport(0.044, viewportScale, 0.08),
+      pointSizeMax: scaleWithViewport(0.084, viewportScale, 0.08),
+      pointSizeScale: scaleWithViewport(3.85, viewportScale, 0.14),
     };
   }
 
@@ -191,11 +193,11 @@ function getSettings(quality: QualityTier, viewportScale = 1): CountdownSettings
     groupSpacingY: scaleWithViewport(1.04, viewportScale, 0.16),
     separatorGapX: scaleWithViewport(0.8, viewportScale, 0.9),
     separatorGapY: scaleWithViewport(0.74, viewportScale, 0.16),
-    separatorWidth: scaleWithViewport(0.19, viewportScale, 0.06),
-    separatorHeight: scaleWithViewport(0.55, viewportScale, 0.06),
-    pointSizeMin: scaleWithViewport(0.03, viewportScale, 0.06),
-    pointSizeMax: scaleWithViewport(0.062, viewportScale, 0.06),
-    pointSizeScale: scaleWithViewport(4.0, viewportScale, 0.14),
+    separatorWidth: scaleWithViewport(0.15, viewportScale, 0.06),
+    separatorHeight: scaleWithViewport(0.46, viewportScale, 0.06),
+    pointSizeMin: scaleWithViewport(0.046, viewportScale, 0.08),
+    pointSizeMax: scaleWithViewport(0.088, viewportScale, 0.08),
+    pointSizeScale: scaleWithViewport(4.1, viewportScale, 0.16),
   };
 }
 
@@ -220,6 +222,30 @@ function mixRgb(a: ReturnType<typeof hexToRgb>, b: ReturnType<typeof hexToRgb>, 
     g: Math.round(a.g + (b.g - a.g) * t),
     b: Math.round(a.b + (b.b - a.b) * t),
   };
+}
+
+const COLOR_STOPS = [
+  "#eafcff",
+  "#8ff0ff",
+  "#00f0ff",
+] as const;
+
+const COLOR_STOPS_RGB = COLOR_STOPS.map(hexToRgb);
+
+function getParticleColor(toneRoll: number, pointMix: number, isBright: boolean) {
+  if (toneRoll < 0.5) {
+    return COLOR_STOPS_RGB[0];
+  }
+
+  if (toneRoll < 0.85) {
+    return isBright
+      ? mixRgb(COLOR_STOPS_RGB[0], COLOR_STOPS_RGB[1], 0.42 + pointMix * 0.18)
+      : mixRgb(COLOR_STOPS_RGB[0], COLOR_STOPS_RGB[1], 0.22 + pointMix * 0.2);
+  }
+
+  return isBright
+    ? mixRgb(COLOR_STOPS_RGB[1], COLOR_STOPS_RGB[2], 0.18 + pointMix * 0.18)
+    : mixRgb(COLOR_STOPS_RGB[1], COLOR_STOPS_RGB[2], 0.08 + pointMix * 0.14);
 }
 
 function sampleGlyphPositions(char: string, resolution: number, sampleCount: number, widthScale: number) {
@@ -307,6 +333,21 @@ function useViewportWidth() {
   return width;
 }
 
+function useViewportHeight() {
+  const [height, setHeight] = useState(() =>
+    typeof window === "undefined" ? 768 : window.innerHeight
+  );
+
+  useEffect(() => {
+    const update = () => setHeight(window.innerHeight);
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  return height;
+}
+
 function useLayoutMode() {
   const [isStacked, setIsStacked] = useState(false);
 
@@ -334,23 +375,32 @@ function useLayoutMode() {
   return isStacked;
 }
 
-function computeLayout(countdown: CountdownValue, settings: CountdownSettings, isStacked: boolean) {
+function pixelsToWorldUnits(px: number, viewportHeightPx: number, cameraViewportHeight: number) {
+  if (viewportHeightPx <= 0) {
+    return 0;
+  }
+
+  return (px / viewportHeightPx) * cameraViewportHeight;
+}
+
+function computeLayout(
+  countdown: CountdownValue,
+  settings: CountdownSettings,
+  isStacked: boolean,
+  sceneOffsetY: number
+) {
   const groups = [
     countdown.days,
     countdown.hours,
     countdown.minutes,
     countdown.seconds,
   ].map((value) => value.slice(-2).padStart(2, "0"));
-  const digitSpacing = settings.digitStep * settings.glyphWidthScale;
-  const stackOffsetY = isStacked ? -1.18 : -0.62;
+  const digitSpacing = settings.digitStep * settings.glyphWidthScale * 1.08;
+  const stackOffsetY = (isStacked ? -1.18 : -0.62) + sceneOffsetY;
 
   const groupOrigins = isStacked
     ? [1.5, 0.5, -0.5, -1.5].map((y) => ({ x: 0, y: y * settings.groupSpacingY + stackOffsetY }))
     : [-1.5, -0.5, 0.5, 1.5].map((x) => ({ x: x * settings.groupSpacingX, y: stackOffsetY }));
-
-  const separatorOrigins = isStacked
-    ? [1, 0, -1].map((y) => ({ x: 0, y: y * settings.separatorGapY + stackOffsetY }))
-    : [-1, 0, 1].map((x) => ({ x: x * settings.separatorGapX, y: stackOffsetY }));
 
   const items: LayoutItem[] = [];
 
@@ -369,15 +419,15 @@ function computeLayout(countdown: CountdownValue, settings: CountdownSettings, i
       });
     });
 
-    if (groupIndex < separatorOrigins.length) {
-      const separatorOrigin = separatorOrigins[groupIndex];
+    if (groupIndex < groupOrigins.length - 1) {
+      const separatorRow = groupOrigins[groupIndex];
       items.push({
         char: ":",
-        originX: separatorOrigin.x,
-        originY: separatorOrigin.y,
+        originX: isStacked ? 0 : (groupOrigins[groupIndex].x + groupOrigins[groupIndex + 1].x) / 2,
+        originY: separatorRow.y,
         scaleX: settings.separatorWidth,
         scaleY: settings.separatorHeight,
-        sampleCount: Math.max(28, Math.round(settings.particlesPerGlyph * 0.35)),
+        sampleCount: Math.max(20, Math.round(settings.particlesPerGlyph * 0.22)),
       });
     }
   });
@@ -425,11 +475,10 @@ function Starfield({
     <points ref={pointsRef} renderOrder={0}>
       <bufferGeometry />
       <pointsMaterial
-        color="#7fdfff"
         size={0.012}
         sizeAttenuation
         transparent
-        opacity={0.26}
+        opacity={0.95}
         depthWrite={false}
       />
     </points>
@@ -456,17 +505,15 @@ function createSystem(
   countdown: CountdownValue,
   settings: CountdownSettings,
   glyphCache: Record<string, GlyphPoint[]>,
-  isStacked: boolean
+  isStacked: boolean,
+  sceneOffsetY: number
 ) {
-  const layout = computeLayout(countdown, settings, isStacked);
+  const layout = computeLayout(countdown, settings, isStacked, sceneOffsetY);
   const count = layout.reduce((total, item) => total + item.sampleCount, 0);
   const positions = new Float32Array(count * 3);
   const targets = new Float32Array(count * 3);
   const colors = new Float32Array(count * 3);
   const sizes = new Float32Array(count);
-  const cyan = hexToRgb("#00f0ff");
-  const blue = hexToRgb("#0055ff");
-  const white = hexToRgb("#eafcff");
 
   let particleOffset = 0;
 
@@ -480,6 +527,7 @@ function createSystem(
       const offset = (particleOffset + particleIndex) * 3;
       const sizeIndex = particleOffset + particleIndex;
       const pointMix = hash01(flowSeed);
+      const toneRoll = hash01(jitterSeed + 97);
       const isBright = hash01(jitterSeed + 41) > 0.86;
 
       const targetX = item.originX + point[0] * item.scaleX;
@@ -498,8 +546,7 @@ function createSystem(
       positions[offset + 1] = targetY + settleY;
       positions[offset + 2] = targetZ + settleZ;
 
-      const colorMix = isBright ? 0.16 + pointMix * 0.06 : pointMix * 0.88;
-      const color = isBright ? mixRgb(cyan, white, colorMix) : mixRgb(cyan, blue, colorMix);
+      const color = getParticleColor(toneRoll, pointMix, isBright);
       colors[offset] = color.r / 255;
       colors[offset + 1] = color.g / 255;
       colors[offset + 2] = color.b / 255;
@@ -527,17 +574,36 @@ function CountdownParticles({
   pointerTarget,
   pointerNdc,
   pointerActive,
+  headerHeightPx,
 }: {
   reducedMotion: boolean;
   quality: QualityTier;
   pointerTarget: MutableRefObject<Vector3>;
   pointerNdc: MutableRefObject<Vector2>;
   pointerActive: MutableRefObject<boolean>;
+  headerHeightPx: number;
 }) {
   const pointsGeometryRef = useRef<BufferGeometry>(null!);
   const materialRef = useRef<ShaderMaterial>(null!);
   const pointerPlane = useMemo(() => new Plane(new Vector3(0, 0, 1), 0), []);
   const viewportWidth = useViewportWidth();
+  const viewportHeight = useViewportHeight();
+  const isStacked = useLayoutMode();
+  const cameraZ = isStacked ? 8.15 : 7.15;
+  const cameraFov = 42;
+  const cameraViewportHeight = useMemo(
+    () => 2 * cameraZ * Math.tan((cameraFov * Math.PI) / 360),
+    [cameraZ]
+  );
+  const sceneOffsetY = useMemo(() => {
+    const headerWorldHeight = pixelsToWorldUnits(
+      headerHeightPx,
+      viewportHeight,
+      cameraViewportHeight
+    );
+
+    return -(headerWorldHeight / 2) - 0.38;
+  }, [cameraViewportHeight, headerHeightPx, viewportHeight]);
   const presentationScale = useMemo(
     () => getPresentationScale(viewportWidth),
     [viewportWidth]
@@ -548,10 +614,9 @@ function CountdownParticles({
   );
   const glyphCache = useMemo(() => buildGlyphCache(settings), [settings]);
   const countdown = useCountdown(EVENT_START);
-  const isStacked = useLayoutMode();
   const countdownRef = useRef(countdown);
   const [system, setSystem] = useState<ParticleSystem>(() =>
-    createSystem(countdown, settings, glyphCache, isStacked)
+    createSystem(countdown, settings, glyphCache, isStacked, sceneOffsetY)
   );
   const systemRef = useRef(system);
 
@@ -561,11 +626,13 @@ function CountdownParticles({
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
-      setSystem(createSystem(countdownRef.current, settings, glyphCache, isStacked));
+      setSystem(
+        createSystem(countdownRef.current, settings, glyphCache, isStacked, sceneOffsetY)
+      );
     });
 
     return () => window.cancelAnimationFrame(frame);
-  }, [glyphCache, isStacked, settings]);
+  }, [glyphCache, isStacked, sceneOffsetY, settings]);
 
   useEffect(() => {
     systemRef.current = system;
@@ -579,7 +646,7 @@ function CountdownParticles({
 
   useEffect(() => {
     const current = systemRef.current;
-    const layout = computeLayout(countdown, settings, isStacked);
+    const layout = computeLayout(countdown, settings, isStacked, sceneOffsetY);
     let particleOffset = 0;
 
     layout.forEach((item, itemIndex) => {
@@ -596,14 +663,13 @@ function CountdownParticles({
 
       particleOffset += item.sampleCount;
     });
-  }, [countdown, glyphCache, isStacked, settings]);
+  }, [countdown, glyphCache, isStacked, sceneOffsetY, settings]);
 
   useFrame((state) => {
     const current = systemRef.current;
     const repelRadius = reducedMotion ? 0.24 : 0.36;
     const repelStrength = reducedMotion ? 0.11 : 0.18;
     const damp = reducedMotion ? 0.07 : 0.16;
-    const cameraZ = isStacked ? 8.15 : 7.15;
     const pointer = pointerTarget.current;
 
     if (materialRef.current) {
@@ -673,7 +739,12 @@ function CountdownParticles({
   );
 }
 
-export function CountdownScene({ active, reducedMotion, quality }: CountdownSceneProps) {
+export function CountdownScene({
+  active,
+  reducedMotion,
+  quality,
+  headerHeightPx,
+}: CountdownSceneProps) {
   const pointerTarget = useRef(new Vector3(999, 999, 999));
   const pointerNdc = useRef(new Vector2(0, 0));
   const pointerActive = useRef(false);
@@ -731,7 +802,16 @@ export function CountdownScene({ active, reducedMotion, quality }: CountdownScen
         pointerTarget={pointerTarget}
         pointerNdc={pointerNdc}
         pointerActive={pointerActive}
+        headerHeightPx={headerHeightPx}
       />
+      <EffectComposer multisampling={0}>
+        <Bloom
+          intensity={0.4}
+          luminanceThreshold={0.4}
+          luminanceSmoothing={0.6}
+          mipmapBlur={false}
+        />
+      </EffectComposer>
     </Canvas>
   );
 }
